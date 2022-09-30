@@ -67,8 +67,8 @@ class _HomepageState extends State<Homepage> {
                     height: 48.0,
                     decoration: BoxDecoration(color: Colors.red.shade300),
                     child: Center(
-                      child: Icon(Icons.mic
-
+                      child: Icon(
+                          Icons.mic
                       )
                     ),
                   ),
@@ -126,6 +126,7 @@ class _HomepageState extends State<Homepage> {
             onTap: () {
               if(played==true && paused == true){
                 setState(() {
+                  print("111111${audioPlayer.onDurationChanged}");
                   paused=false;
                 });
              play();
@@ -239,7 +240,9 @@ class _HomepageState extends State<Homepage> {
       var path = recordFilePath;
       getFilePath().then((v) => path=v);
       print("dfdfdsfdsfdsfds");
-      audioPlayer.play(DeviceFileSource(path));
+      audioPlayer.play(DeviceFileSource(path)).then((value) => audioPlayer.getDuration().then((value) => print("12323232${value!.inMilliseconds}")));
+      audioPlayer.getDuration();
+      print("123455555${audioPlayer.onPlayerComplete}");
       slider();
     }
   }
@@ -251,6 +254,7 @@ class _HomepageState extends State<Homepage> {
   Future<String> getFilePath() async {
     Directory storageDirectory = await getApplicationDocumentsDirectory();
     String sdPath = storageDirectory.path + "/record";
+    print("skadksdksdkksadkdkd${sdPath}");
     var d = Directory(sdPath);
     if (!d.existsSync()) {
       d.createSync(recursive: true);
