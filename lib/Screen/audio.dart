@@ -27,8 +27,10 @@ class _HomepageState extends State<Homepage> {
   bool played = true;
   bool paused = true;
   bool _value = false;
-  var sound;
+  bool sound = true;
+  bool values = true;
   double val = 1;
+  List audioplayer=[];
 
   @override
   void initState() {
@@ -40,14 +42,21 @@ class _HomepageState extends State<Homepage> {
           duration = d;
         },
       );
-      print("lllllld${duration.inMilliseconds}");
+      print("lllllld${duration.inSeconds}");
     });
     audioPlayer.onPositionChanged.listen((d) {
       setState(() {
         position = d;
-
-        print("llllll${position.inMilliseconds}");
-        print("mmmmm${sound}");
+        print("llllll${position.inSeconds}");
+        print(position);
+        print(duration);
+      });
+    });
+    audioPlayer.onPlayerComplete.listen((event) {
+      setState(() {
+        position=Duration(seconds: 0);
+        played==true;
+        paused==false;
       });
     });
 
@@ -56,12 +65,10 @@ class _HomepageState extends State<Homepage> {
       print("object");
     });
   }
-
   void seekToSecond(int second) {
     Duration newDuration = Duration(seconds: second);
     audioPlayer.seek(newDuration);
   }
-
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
@@ -147,7 +154,9 @@ class _HomepageState extends State<Homepage> {
                 alignment: AlignmentDirectional.center,
                 width: 100,
                 height: 50,
-                child: Icon(played == true && paused == true
+                child: Icon(played == true && paused == true ||
+                        position.toString().split(".")[0] ==
+                            duration.toString().split(".")[0]
                     ? Icons.play_arrow
                     : Icons.pause)),
           ),
@@ -158,7 +167,6 @@ class _HomepageState extends State<Homepage> {
       ),
     );
   }
-
   Widget slider() {
     print("${position.inSeconds.toDouble()}  $duration");
     return Slider(
@@ -166,17 +174,17 @@ class _HomepageState extends State<Homepage> {
         inactiveColor: Colors.orange,
         //min: 0.0,
         /*divisions: 1,*/
-        value: position.inSeconds.toDouble() * 1000,
-        max: duration.inSeconds.toDouble() * 1000,
+        value: position.inSeconds.toDouble() ,
+        max: duration.inSeconds.toDouble() ,
         onChanged: (double value) async {
-          /*setState(() {
+          setState(() {
+            pause();
             seekToSecond(value.toInt());
-            value = value;
             print("time${value}");
-          });*/
+            resume();
+          });
         });
   }
-
   Widget audio() {
     return Padding(
         padding: EdgeInsets.symmetric(horizontal: 20),
@@ -194,7 +202,6 @@ class _HomepageState extends State<Homepage> {
           ],
         ));
   }
-
   Future<bool> checkPermission() async {
     if (!await Permission.microphone.isGranted) {
       PermissionStatus status = await Permission.microphone.request();
@@ -204,7 +211,6 @@ class _HomepageState extends State<Homepage> {
     }
     return true;
   }
-
   void startRecord() async {
     bool hasPermission = await checkPermission();
     if (hasPermission) {
@@ -220,7 +226,6 @@ class _HomepageState extends State<Homepage> {
     }
     setState(() {});
   }
-
   void pauseRecord() {
     if (RecordMp3.instance.status == RecordStatus.PAUSE) {
       bool s = RecordMp3.instance.resume();
@@ -236,7 +241,6 @@ class _HomepageState extends State<Homepage> {
       }
     }
   }
-
   void stopRecord() {
     bool s = RecordMp3.instance.stop();
     if (s) {
@@ -245,7 +249,6 @@ class _HomepageState extends State<Homepage> {
       setState(() {});
     }
   }
-
   void resumeRecord() {
     bool s = RecordMp3.instance.resume();
     if (s) {
@@ -253,12 +256,12 @@ class _HomepageState extends State<Homepage> {
       setState(() {});
     }
   }
-
   void play() {
     if (recordFilePath != null && File(recordFilePath).existsSync()) {
       print("${audioPlayer.playerId}");
       var path = recordFilePath;
       getFilePath().then((v) => path = v);
+      audioplayer.add(recordFilePath);
       print("dfdfdsfdsfdsfds");
       audioPlayer.play(DeviceFileSource(path)).then((value) => audioPlayer
           .getDuration()
@@ -267,14 +270,15 @@ class _HomepageState extends State<Homepage> {
       print("kkskskksk${slider()}");
     }
   }
-
   void pause() {
     print("ffffffffffff");
     audioPlayer.pause();
   }
-
+  void resume() {
+    print("ffffffffffff");
+    audioPlayer.resume();
+  }
   int i = 0;
-
   Future<String> getFilePath() async {
     Directory storageDirectory = await getApplicationDocumentsDirectory();
     String sdPath = storageDirectory.path + "/record";
