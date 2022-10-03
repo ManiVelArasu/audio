@@ -7,49 +7,61 @@ import 'dart:async';
 
 import 'package:record_mp3/record_mp3.dart';
 
-
 void main() => runApp(Homepage());
 
 class Homepage extends StatefulWidget {
   @override
   _HomepageState createState() => _HomepageState();
 }
+
 late String recordFilePath;
-String playerid="";
+String playerid = "";
 var path;
 AudioPlayer audioPlayer = new AudioPlayer();
+
 class _HomepageState extends State<Homepage> {
   Duration duration = new Duration();
   Duration position = new Duration();
   String statusText = "";
   bool isComplete = false;
-  bool played=true;
-  bool paused=true;
+  bool played = true;
+  bool paused = true;
   bool _value = false;
+  var sound;
   double val = 1;
 
   @override
   void initState() {
     // TODO: implement initState
-    audioPlayer = new AudioPlayer();
 
-    audioPlayer.onDurationChanged.listen((d){setState(() {
-      duration=d;
-    });});
+    audioPlayer.onDurationChanged.listen((d) {
+      setState(
+        () {
+          duration = d;
+        },
+      );
+      print("lllllld${duration.inMilliseconds}");
+    });
+    audioPlayer.onPositionChanged.listen((d) {
+      setState(() {
+        position = d;
 
-    audioPlayer.onPositionChanged.listen((d){setState(() {
-      duration=d;
-    });});
+        print("llllll${position.inMilliseconds}");
+        print("mmmmm${sound}");
+      });
+    });
 
     super.initState();
     setState(() {
       print("object");
     });
   }
+
   void seekToSecond(int second) {
     Duration newDuration = Duration(seconds: second);
     audioPlayer.seek(newDuration);
   }
+
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
@@ -66,11 +78,7 @@ class _HomepageState extends State<Homepage> {
                   child: Container(
                     height: 48.0,
                     decoration: BoxDecoration(color: Colors.red.shade300),
-                    child: Center(
-                      child: Icon(
-                          Icons.mic
-                      )
-                    ),
+                    child: Center(child: Icon(Icons.mic)),
                   ),
                   onTap: () async {
                     startRecord();
@@ -85,9 +93,8 @@ class _HomepageState extends State<Homepage> {
                     child: Center(
                       child: Icon(
                         RecordMp3.instance.status == RecordStatus.PAUSE
-                            ? Icons.pause:Icons.play_arrow
-
-                           ,
+                            ? Icons.pause
+                            : Icons.play_arrow,
                       ),
                     ),
                   ),
@@ -101,18 +108,17 @@ class _HomepageState extends State<Homepage> {
                   child: Container(
                     height: 48.0,
                     decoration: BoxDecoration(color: Colors.green.shade300),
-                    child: Center(
-                      child: Icon(Icons.stop
-                      )
-                    ),
+                    child: Center(child: Icon(Icons.stop)),
                   ),
                   onTap: () {
                     stopRecord();
                   },
                 ),
               ),
-
             ],
+          ),
+          Container(
+            child: audio(),
           ),
           Padding(
             padding: const EdgeInsets.only(top: 20.0),
@@ -124,54 +130,69 @@ class _HomepageState extends State<Homepage> {
           GestureDetector(
             behavior: HitTestBehavior.opaque,
             onTap: () {
-              if(played==true && paused == true){
+              if (played == true && paused == true) {
                 setState(() {
-                  print("111111${audioPlayer.onDurationChanged}");
-                  paused=false;
+                  paused = false;
                 });
-             play();
-              }
-              else{
+                play();
+              } else {
                 setState(() {
-                  paused=true;
+                  paused = true;
                 });
                 pause();
               }
             },
             child: Container(
-              margin: EdgeInsets.only(top: 30),
-              alignment: AlignmentDirectional.center,
-              width: 100,
-              height: 50,
-              child:Icon(
-                  played==true && paused == true?
-                      Icons.play_arrow:Icons.pause
-              )
-
-            ),
+                margin: EdgeInsets.only(top: 30),
+                alignment: AlignmentDirectional.center,
+                width: 100,
+                height: 50,
+                child: Icon(played == true && paused == true
+                    ? Icons.play_arrow
+                    : Icons.pause)),
           ),
           Container(
             child: slider(),
           )
-
-
         ]),
       ),
     );
   }
+
   Widget slider() {
-    return Slider.adaptive(
+    print("${position.inSeconds.toDouble()}  $duration");
+    return Slider(
         activeColor: Colors.blue,
         inactiveColor: Colors.orange,
-        min: 0.0,
-        value: position.inSeconds.toDouble(),
-        max: duration.inSeconds.toDouble(),
-        onChanged: (double value) {
-          setState(() {
+        //min: 0.0,
+        /*divisions: 1,*/
+        value: position.inSeconds.toDouble() * 1000,
+        max: duration.inSeconds.toDouble() * 1000,
+        onChanged: (double value) async {
+          /*setState(() {
             seekToSecond(value.toInt());
             value = value;
-          });
+            print("time${value}");
+          });*/
         });
+  }
+
+  Widget audio() {
+    return Padding(
+        padding: EdgeInsets.symmetric(horizontal: 20),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text(
+              position.toString().split(".")[0],
+              style: TextStyle(fontSize: 20),
+            ),
+            Text(
+              duration.toString().split(".")[0],
+              style: TextStyle(fontSize: 20),
+            ),
+          ],
+        ));
   }
 
   Future<bool> checkPermission() async {
@@ -183,6 +204,7 @@ class _HomepageState extends State<Homepage> {
     }
     return true;
   }
+
   void startRecord() async {
     bool hasPermission = await checkPermission();
     if (hasPermission) {
@@ -191,9 +213,7 @@ class _HomepageState extends State<Homepage> {
       isComplete = false;
       RecordMp3.instance.start(recordFilePath, (type) {
         statusText = "Record error--->$type";
-        setState(() {
-
-        });
+        setState(() {});
       });
     } else {
       statusText = "No microphone permission";
@@ -221,7 +241,6 @@ class _HomepageState extends State<Homepage> {
     bool s = RecordMp3.instance.stop();
     if (s) {
       statusText = "Record complete";
-
       isComplete = true;
       setState(() {});
     }
@@ -234,23 +253,28 @@ class _HomepageState extends State<Homepage> {
       setState(() {});
     }
   }
+
   void play() {
     if (recordFilePath != null && File(recordFilePath).existsSync()) {
-      print("${ audioPlayer.playerId}");
+      print("${audioPlayer.playerId}");
       var path = recordFilePath;
-      getFilePath().then((v) => path=v);
+      getFilePath().then((v) => path = v);
       print("dfdfdsfdsfdsfds");
-      audioPlayer.play(DeviceFileSource(path)).then((value) => audioPlayer.getDuration().then((value) => print("12323232${value!.inMilliseconds}")));
-      audioPlayer.getDuration();
-      print("123455555${audioPlayer.onPlayerComplete}");
-      slider();
+      audioPlayer.play(DeviceFileSource(path)).then((value) => audioPlayer
+          .getDuration()
+          .then((value) => print("12323232${value!.inSeconds}")));
+      print("kkskskksk${slider()}");
+      print("kkskskksk${slider()}");
     }
   }
+
   void pause() {
-      print("ffffffffffff");
-      audioPlayer.pause();
+    print("ffffffffffff");
+    audioPlayer.pause();
   }
+
   int i = 0;
+
   Future<String> getFilePath() async {
     Directory storageDirectory = await getApplicationDocumentsDirectory();
     String sdPath = storageDirectory.path + "/record";
