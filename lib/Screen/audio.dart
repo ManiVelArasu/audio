@@ -25,11 +25,10 @@ class _HomepageState extends State<Homepage> {
   Duration position = new Duration();
   String statusText = "";
   bool isComplete = false;
-
   var isplaying = false;
-  bool played = true;
-  bool paused = true;
-  bool _value = false;
+  var ispaused = false;
+  var played = false;
+  Color x = Colors.red;
   bool sound = true;
   bool values = true;
   double val = 1;
@@ -56,11 +55,8 @@ class _HomepageState extends State<Homepage> {
       });
     });
     audioPlayer.onPlayerComplete.listen((event) {
-
       isplaying = false;
-      setState(() {
-
-      });
+      setState(() {});
       setState(() {
         position = Duration(seconds: 0);
       });
@@ -91,11 +87,23 @@ class _HomepageState extends State<Homepage> {
                 child: GestureDetector(
                   child: Container(
                     height: 48.0,
-                    decoration: BoxDecoration(color: Colors.red.shade300),
+                    decoration: BoxDecoration(color: x),
                     child: Center(child: Icon(Icons.mic)),
                   ),
                   onTap: () async {
-                    startRecord();
+                    if (played == false) {
+                      setState(() {
+                        played = true;
+                        x = Colors.green;
+                      });
+                      startRecord();
+                    } else if (played == true) {
+                      stopRecord();
+                      setState(() {
+                        played = false;
+                        x = Colors.red;
+                      });
+                    }
                   },
                 ),
               ),
@@ -117,7 +125,7 @@ class _HomepageState extends State<Homepage> {
                   },
                 ),
               ),
-              Expanded(
+              /*    Expanded(
                 child: GestureDetector(
                   child: Container(
                     height: 48.0,
@@ -125,10 +133,9 @@ class _HomepageState extends State<Homepage> {
                     child: Center(child: Icon(Icons.stop)),
                   ),
                   onTap: () {
-                    stopRecord();
                   },
                 ),
-              ),
+              ),*/
             ],
           ),
           Container(
@@ -144,16 +151,28 @@ class _HomepageState extends State<Homepage> {
           GestureDetector(
             behavior: HitTestBehavior.opaque,
             onTap: () {
-              if (played == true && paused == true) {
+              if (isplaying == false && ispaused == false) {
                 setState(() {
-                  paused = false;
+                  isplaying = true;
                 });
                 play();
-              } else if (paused == false && played == true) {
-                setState(() {
-                  paused = true;
-                });
+              } else if (ispaused == false && isplaying == true) {
                 pause();
+                setState(() {
+                  ispaused = true;
+                  isplaying = false;
+                });
+              } else if (ispaused == true && isplaying == false) {
+                setState(() {
+                  ispaused = false;
+                  isplaying = true;
+                });
+                resume();
+              } else {
+                setState(() {
+                  ispaused = false;
+                  isplaying = false;
+                });
               }
             },
             child: Container(
@@ -161,16 +180,14 @@ class _HomepageState extends State<Homepage> {
                 alignment: AlignmentDirectional.center,
                 width: 100,
                 height: 50,
-                child: Icon(!isplaying
-                    ? Icons.play_arrow
-                    : Icons.pause)),
+                child: Icon(!isplaying ? Icons.play_arrow : Icons.pause)),
           ),
           Container(
             child: slider(),
           ),
-          /* Container(
+           Container(
             child: list(),
-          )*/
+          )
         ]),
       ),
     );
@@ -189,7 +206,6 @@ class _HomepageState extends State<Homepage> {
             seekToSecond(value.toInt());
             print("time${value}");
           });
-          pause();
         });
   }
   Widget audio() {
@@ -209,9 +225,10 @@ class _HomepageState extends State<Homepage> {
           ],
         ));
   }
-/*  Widget list() {
+
+  Widget list() {
     return Container(
-      height: 430,
+      height: 400,
       child: ListView.builder(
           itemCount: audioplayerss.length,
           itemBuilder: (BuildContext context, int index) {
@@ -226,10 +243,6 @@ class _HomepageState extends State<Homepage> {
               child: Card(
                   margin:
                       const EdgeInsets.symmetric(horizontal: 15, vertical: 5),
-                  child: InkWell(
-                    onDoubleTap: (){
-                      pause();
-                    },
                     child: ListTile(
                       leading: const Icon(Icons.list),
                       trailing: const Text(
@@ -241,31 +254,30 @@ class _HomepageState extends State<Homepage> {
                       ),
                       onTap: () {
                         print("12345678098765432${index}");
-                        if (played == true && paused == true) {
-                          setState(() {
-                            paused = true;
+                        print("12345678098765432${isplaying}");
+                        print("12345678098765432bbbbbbb${ispaused}");
+                       if(isplaying==false&&ispaused==false && index!=player){
+                         setState(() {
+                           print("123432423");
+                           print("123432423");
+                           player=index;
+                         });
+                         play();
+                       }
+                       else {
+                         setState(() {
+                           print("aaaaaaaaaaa");
+                           position = Duration(seconds: 0);
+                           player=index;
+                           isplaying==true;
+                           ispaused==false;
+                         });
+                         play();
+                       }
 
-                          });
-                          play();
-                        } else {
-                          setState(() {
-                            paused = true;
-                          });
-                          pause();
-                        }
-                        audioplayerss[index];
-                        setState(() {
-                          player = index;
-                        });
-                        play();
-                      },
-                      onLongPress: () {
-                        setState(() {
-                          audioplayerss.remove(player);
-                        });
                       },
                     ),
-                  )),
+                  ),
               background: Container(
                 color: Colors.red,
                 margin: const EdgeInsets.symmetric(horizontal: 15),
@@ -278,8 +290,7 @@ class _HomepageState extends State<Homepage> {
             );
           }),
     );
-  }*/
-
+  }
   Future<bool> checkPermission() async {
     if (!await Permission.microphone.isGranted) {
       PermissionStatus status = await Permission.microphone.request();
@@ -291,10 +302,9 @@ class _HomepageState extends State<Homepage> {
   }
   void startRecord() async {
     bool hasPermission = await checkPermission();
-    if (hasPermission) {
+    if (hasPermission && isplaying != true && ispaused != true) {
       statusText = "Recording...";
       recordFilePath = await getFilePath();
-
       audioplayerss.add(recordFilePath);
       isComplete = false;
       RecordMp3.instance.start(recordFilePath, (type) {
@@ -302,7 +312,7 @@ class _HomepageState extends State<Homepage> {
         setState(() {});
       });
     } else {
-      statusText = "No microphone permission";
+      statusText = "Do Not Recorded";
     }
     setState(() {});
   }
@@ -339,8 +349,8 @@ class _HomepageState extends State<Homepage> {
   void play() {
     if (recordFilePath != null && File(recordFilePath).existsSync()) {
       print("${audioPlayer.playerId}");
-      var path = recordFilePath;
-
+      var path = audioplayerss[player];
+      print("maniii${player}");
       getFilePath().then((v) => path = v);
       print("123dfghj${recordFilePath}");
       print("dfdfdsfdsfdsfds");
@@ -350,19 +360,16 @@ class _HomepageState extends State<Homepage> {
       print("kkskskksk${slider()}");
       print("kkskskksk${slider()}");
       isplaying = true;
-      setState(() {
-
-      });
+      setState(() {});
     }
   }
   void pause() {
     print("ffffffffffff");
     audioPlayer.pause();
     isplaying = false;
+    setState(() {});
     setState(() {
-    });
-    setState(() {
-      if (played == true && paused == false) {
+      if (isplaying == true && ispaused == false) {
         play();
       }
     });
@@ -371,9 +378,7 @@ class _HomepageState extends State<Homepage> {
     print("ffffffffffff");
     audioPlayer.resume();
     isplaying = true;
-    setState(() {
-
-    });
+    setState(() {});
   }
   int i = 0;
   Future<String> getFilePath() async {
