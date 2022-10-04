@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'package:audio/Constants/constants.dart';
 import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter/material.dart';
 import 'package:path_provider/path_provider.dart';
@@ -24,13 +25,16 @@ class _HomepageState extends State<Homepage> {
   Duration position = new Duration();
   String statusText = "";
   bool isComplete = false;
+
+  var isplaying = false;
   bool played = true;
   bool paused = true;
   bool _value = false;
   bool sound = true;
   bool values = true;
   double val = 1;
-  List audioplayer=[];
+  List audioplayerss = [];
+  var player;
 
   @override
   void initState() {
@@ -42,33 +46,36 @@ class _HomepageState extends State<Homepage> {
           duration = d;
         },
       );
-      print("lllllld${duration.inSeconds}");
+      print("lllllld${duration.inSeconds.toDouble()}");
+      print("sfdcsdfdfssdf scffdfsc afdgvrett${audioplayerss}");
     });
     audioPlayer.onPositionChanged.listen((d) {
       setState(() {
         position = d;
-        print("llllll${position.inSeconds}");
-        print(position);
-        print(duration);
+        print("llllll${position.inSeconds.toDouble()}");
       });
     });
     audioPlayer.onPlayerComplete.listen((event) {
+
+      isplaying = false;
       setState(() {
-        position=Duration(seconds: 0);
-        played==true;
-        paused==false;
+
+      });
+      setState(() {
+        position = Duration(seconds: 0);
       });
     });
-
     super.initState();
     setState(() {
       print("object");
     });
   }
+
   void seekToSecond(int second) {
     Duration newDuration = Duration(seconds: second);
     audioPlayer.seek(newDuration);
   }
+
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
@@ -142,7 +149,7 @@ class _HomepageState extends State<Homepage> {
                   paused = false;
                 });
                 play();
-              } else {
+              } else if (paused == false && played == true) {
                 setState(() {
                   paused = true;
                 });
@@ -154,15 +161,16 @@ class _HomepageState extends State<Homepage> {
                 alignment: AlignmentDirectional.center,
                 width: 100,
                 height: 50,
-                child: Icon(played == true && paused == true ||
-                        position.toString().split(".")[0] ==
-                            duration.toString().split(".")[0]
+                child: Icon(!isplaying
                     ? Icons.play_arrow
                     : Icons.pause)),
           ),
           Container(
             child: slider(),
-          )
+          ),
+          /* Container(
+            child: list(),
+          )*/
         ]),
       ),
     );
@@ -174,15 +182,14 @@ class _HomepageState extends State<Homepage> {
         inactiveColor: Colors.orange,
         //min: 0.0,
         /*divisions: 1,*/
-        value: position.inSeconds.toDouble() ,
-        max: duration.inSeconds.toDouble() ,
+        value: position.inSeconds.toDouble(),
+        max: duration.inSeconds.toDouble(),
         onChanged: (double value) async {
           setState(() {
-            pause();
             seekToSecond(value.toInt());
             print("time${value}");
-            resume();
           });
+          pause();
         });
   }
   Widget audio() {
@@ -202,6 +209,77 @@ class _HomepageState extends State<Homepage> {
           ],
         ));
   }
+/*  Widget list() {
+    return Container(
+      height: 430,
+      child: ListView.builder(
+          itemCount: audioplayerss.length,
+          itemBuilder: (BuildContext context, int index) {
+            return Dismissible(
+              key: UniqueKey(),
+              direction: DismissDirection.endToStart,
+              onDismissed: (_) {
+                setState(() {
+                  audioplayerss.removeAt(index);
+                });
+              },
+              child: Card(
+                  margin:
+                      const EdgeInsets.symmetric(horizontal: 15, vertical: 5),
+                  child: InkWell(
+                    onDoubleTap: (){
+                      pause();
+                    },
+                    child: ListTile(
+                      leading: const Icon(Icons.list),
+                      trailing: const Text(
+                        "GFG",
+                        style: TextStyle(color: Colors.green, fontSize: 15),
+                      ),
+                      title: InkWell(
+                        child: Text("List item $index"),
+                      ),
+                      onTap: () {
+                        print("12345678098765432${index}");
+                        if (played == true && paused == true) {
+                          setState(() {
+                            paused = true;
+
+                          });
+                          play();
+                        } else {
+                          setState(() {
+                            paused = true;
+                          });
+                          pause();
+                        }
+                        audioplayerss[index];
+                        setState(() {
+                          player = index;
+                        });
+                        play();
+                      },
+                      onLongPress: () {
+                        setState(() {
+                          audioplayerss.remove(player);
+                        });
+                      },
+                    ),
+                  )),
+              background: Container(
+                color: Colors.red,
+                margin: const EdgeInsets.symmetric(horizontal: 15),
+                alignment: Alignment.centerRight,
+                child: const Icon(
+                  Icons.delete,
+                  color: Colors.white,
+                ),
+              ),
+            );
+          }),
+    );
+  }*/
+
   Future<bool> checkPermission() async {
     if (!await Permission.microphone.isGranted) {
       PermissionStatus status = await Permission.microphone.request();
@@ -216,6 +294,8 @@ class _HomepageState extends State<Homepage> {
     if (hasPermission) {
       statusText = "Recording...";
       recordFilePath = await getFilePath();
+
+      audioplayerss.add(recordFilePath);
       isComplete = false;
       RecordMp3.instance.start(recordFilePath, (type) {
         statusText = "Record error--->$type";
@@ -260,23 +340,40 @@ class _HomepageState extends State<Homepage> {
     if (recordFilePath != null && File(recordFilePath).existsSync()) {
       print("${audioPlayer.playerId}");
       var path = recordFilePath;
+
       getFilePath().then((v) => path = v);
-      audioplayer.add(recordFilePath);
+      print("123dfghj${recordFilePath}");
       print("dfdfdsfdsfdsfds");
       audioPlayer.play(DeviceFileSource(path)).then((value) => audioPlayer
           .getDuration()
           .then((value) => print("12323232${value!.inSeconds}")));
       print("kkskskksk${slider()}");
       print("kkskskksk${slider()}");
+      isplaying = true;
+      setState(() {
+
+      });
     }
   }
   void pause() {
     print("ffffffffffff");
     audioPlayer.pause();
+    isplaying = false;
+    setState(() {
+    });
+    setState(() {
+      if (played == true && paused == false) {
+        play();
+      }
+    });
   }
   void resume() {
     print("ffffffffffff");
     audioPlayer.resume();
+    isplaying = true;
+    setState(() {
+
+    });
   }
   int i = 0;
   Future<String> getFilePath() async {
