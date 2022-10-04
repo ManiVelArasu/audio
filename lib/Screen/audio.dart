@@ -168,6 +168,9 @@ class _HomepageState extends State<Homepage> {
           Container(
             child: slider(),
           ),
+          Container(
+            child: audio(),
+          ),
           /* Container(
             child: list(),
           )*/
@@ -291,10 +294,10 @@ class _HomepageState extends State<Homepage> {
   }
   void startRecord() async {
     bool hasPermission = await checkPermission();
-    if (hasPermission) {
+    if (hasPermission && isplaying!=true ) {
+
       statusText = "Recording...";
       recordFilePath = await getFilePath();
-
       audioplayerss.add(recordFilePath);
       isComplete = false;
       RecordMp3.instance.start(recordFilePath, (type) {
@@ -302,7 +305,7 @@ class _HomepageState extends State<Homepage> {
         setState(() {});
       });
     } else {
-      statusText = "No microphone permission";
+      statusText = "Do Not Recorded";
     }
     setState(() {});
   }
@@ -340,7 +343,6 @@ class _HomepageState extends State<Homepage> {
     if (recordFilePath != null && File(recordFilePath).existsSync()) {
       print("${audioPlayer.playerId}");
       var path = recordFilePath;
-
       getFilePath().then((v) => path = v);
       print("123dfghj${recordFilePath}");
       print("dfdfdsfdsfdsfds");
@@ -351,7 +353,6 @@ class _HomepageState extends State<Homepage> {
       print("kkskskksk${slider()}");
       isplaying = true;
       setState(() {
-
       });
     }
   }
@@ -372,7 +373,6 @@ class _HomepageState extends State<Homepage> {
     audioPlayer.resume();
     isplaying = true;
     setState(() {
-
     });
   }
   int i = 0;
