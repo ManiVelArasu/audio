@@ -125,7 +125,7 @@ class _HomepageState extends State<Homepage> {
                   },
                 ),
               ),
-              /*    Expanded(
+              Expanded(
                 child: GestureDetector(
                   child: Container(
                     height: 48.0,
@@ -133,9 +133,10 @@ class _HomepageState extends State<Homepage> {
                     child: Center(child: Icon(Icons.stop)),
                   ),
                   onTap: () {
+                    stopRecord();
                   },
                 ),
-              ),*/
+              ),
             ],
           ),
           Container(
@@ -369,7 +370,9 @@ class _HomepageState extends State<Homepage> {
     isplaying = false;
     setState(() {});
     setState(() {
-      if (isplaying == true && ispaused == false) {
+    });
+    setState(() {
+      if (played == true && paused == false) {
         play();
       }
     });
