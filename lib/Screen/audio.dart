@@ -91,13 +91,13 @@ class _HomepageState extends State<Homepage> {
                     child: Center(child: Icon(Icons.mic)),
                   ),
                   onTap: () async {
-                    if (played == false) {
+                    if (played==false&&isplaying!=true) {
                       setState(() {
                         played = true;
                         x = Colors.green;
                       });
                       startRecord();
-                    } else if (played == true) {
+                    } else if (played==true) {
                       stopRecord();
                       setState(() {
                         played = false;
@@ -229,7 +229,7 @@ class _HomepageState extends State<Homepage> {
 
   Widget list() {
     return Container(
-      height: 400,
+      height: 430,
       child: ListView.builder(
           itemCount: audioplayerss.length,
           itemBuilder: (BuildContext context, int index) {
@@ -245,19 +245,14 @@ class _HomepageState extends State<Homepage> {
                   margin:
                       const EdgeInsets.symmetric(horizontal: 15, vertical: 5),
                     child: ListTile(
-                      leading: const Icon(Icons.list),
-                      trailing: const Text(
-                        "GFG",
-                        style: TextStyle(color: Colors.green, fontSize: 15),
-                      ),
                       title: InkWell(
-                        child: Text("List item $index"),
+                        child: Text("Recorder ${index}"),
                       ),
                       onTap: () {
                         print("12345678098765432${index}");
                         print("12345678098765432${isplaying}");
                         print("12345678098765432bbbbbbb${ispaused}");
-                       if(isplaying==false&&ispaused==false && index!=player){
+                       if(isplaying==false&&ispaused==false && index!=player && played!=true){
                          setState(() {
                            print("123432423");
                            print("123432423");
@@ -265,6 +260,13 @@ class _HomepageState extends State<Homepage> {
                          });
                          play();
                        }
+                        else if(played==true){
+                          setState(() {
+                            print("123432423");
+                            print("123432423");
+                            player=index;
+                          });
+                        }
                        else {
                          setState(() {
                            print("aaaaaaaaaaa");
@@ -272,10 +274,10 @@ class _HomepageState extends State<Homepage> {
                            player=index;
                            isplaying==true;
                            ispaused==false;
+                           play();
                          });
-                         play();
-                       }
 
+                       }
                       },
                     ),
                   ),
@@ -372,7 +374,7 @@ class _HomepageState extends State<Homepage> {
     setState(() {
     });
     setState(() {
-      if (played == true && paused == false) {
+      if (isplaying == true && ispaused == false) {
         play();
       }
     });
